@@ -1,0 +1,48 @@
+[        baseline] seed=0 EX=0.352 (n=108) tok=23922
+[        +linking] seed=0 EX=0.296 (n=108) tok=40797
+[        +fewshot] seed=0 EX=0.880 (n=108) tok=70708
+[       +semantic] seed=0 EX=0.963 (n=108) tok=88730
+[     +correction] seed=0 EX=0.981 (n=108) tok=93548
+[        +clarify] seed=0 EX=0.981 (n=108) tok=80907
+[   semantic_only] seed=0 EX=0.444 (n=108) tok=41944
+[ correction_only] seed=0 EX=0.370 (n=108) tok=63316
+Traceback (most recent call last):
+  File "/Users/thaycacac/Documents/mse/ky4/querycraft-ai/experiments/run_eventsql.py", line 109, in <module>
+    main()
+    ~~~~^^
+  File "/Users/thaycacac/Documents/mse/ky4/querycraft-ai/experiments/run_eventsql.py", line 88, in main
+    r = agent.run(q[key], seed=seed)
+  File "/Users/thaycacac/Documents/mse/ky4/querycraft-ai/src/querycraft/agent.py", line 92, in run
+    res.resolved_metrics = [m.name for m in resolution.metrics]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/thaycacac/Documents/mse/ky4/querycraft-ai/src/querycraft/llm.py", line 54, in chat
+    with urllib.request.urlopen(req, timeout=600) as r:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/urllib/request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/urllib/request.py", line 489, in open
+    response = self._open(req, data)
+  File "/opt/anaconda3/lib/python3.13/urllib/request.py", line 506, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/opt/anaconda3/lib/python3.13/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/opt/anaconda3/lib/python3.13/urllib/request.py", line 1348, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/urllib/request.py", line 1323, in do_open
+    r = h.getresponse()
+  File "/opt/anaconda3/lib/python3.13/http/client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/anaconda3/lib/python3.13/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out

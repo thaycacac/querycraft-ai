@@ -1,0 +1,20 @@
+{"q": "Tổng tiền thu được từ các đơn mua hàng trong tháng 1/2026?", "metrics": ["revenue"], "same_as": "Doanh thu bán hàng tháng 1/2026 là bao nhiêu?"}
+{"q": "Mỗi ngày có bao nhiêu người mở app vào ngày 2026-01-15?", "metrics": ["dau"], "same_as": "DAU của ngày 2026-01-15 là bao nhiêu?"}
+{"q": "Trung bình mỗi người trả tiền đóng góp bao nhiêu trong tháng 2/2026?", "metrics": ["arppu"], "same_as": "ARPPU của tháng 2/2026?"}
+{"q": "Bao nhiêu phần trăm người thêm hàng vào giỏ nhưng không mua trong tháng 1/2026?", "metrics": ["cart_abandonment_rate"], "same_as": "Tỷ lệ bỏ giỏ hàng trong tháng 1/2026?"}
+{"q": "Tỷ lệ người dùng quay lại vào hôm sau của nhóm đăng ký ngày 2026-01-10?", "metrics": ["retention_d1"], "same_as": "Tỷ lệ retention D1 của nhóm người dùng đăng ký ngày 2026-01-10?"}
+{"q": "Tiền kiếm được từ quảng cáo hiển thị theo nền tảng?", "metrics": ["ad_revenue"], "same_as": "Doanh thu quảng cáo theo nền tảng?"}
+{"q": "Một đơn hàng trung bình trị giá bao nhiêu trong tháng 2/2026?", "metrics": ["aov"], "same_as": "Giá trị đơn hàng trung bình (AOV) tháng 2/2026?"}
+{"q": "Số lượng khách hàng đã mua hàng ít nhất một lần ở US?", "metrics": ["paying_users"], "same_as": "Số người dùng trả phí ở US?"}
+{"q": "Có bao nhiêu người dùng hoạt động mỗi tháng trong 2026-02?", "metrics": ["mau"], "same_as": "MAU của tháng 2/2026?"}
+{"q": "Phần trăm người chơi học xong hướng dẫn ở JP?", "metrics": ["tutorial_completion_rate"], "same_as": "Tỷ lệ hoàn thành tutorial của người dùng JP?"}
+{"q": "Bao nhiêu đơn đặt hàng trong tháng 1/2026?", "metrics": ["orders"]}
+{"q": "How many unique players opened a session on 2026-01-20?", "metrics": ["dau"], "same_as": "What is the DAU on 2026-01-20?"}
+{"q": "Total sales income in January 2026?", "metrics": ["revenue"], "same_as": "What is the purchase revenue in January 2026?"}
+{"q": "Share of cart users who bought something in February 2026?", "metrics": ["cart_conversion_rate"], "same_as": "Cart-to-purchase conversion rate in February 2026?"}
+{"q": "What fraction of viewers end up purchasing on ios?", "metrics": ["conversion_rate"], "same_as": "View-to-purchase conversion rate on ios?"}
+{"q": "Average spend per buyer in February 2026?", "metrics": ["arppu"], "same_as": "What is the ARPPU for February 2026?"}
+{"q": "Next-day return rate for users who joined on 2026-02-01?", "metrics": ["retention_d1"], "same_as": "D1 retention of the cohort that signed up on 2026-02-01?"}
+{"q": "Money earned from ads in the US?", "metrics": ["ad_revenue"], "same_as": "Ad revenue in US?"}
+{"q": "Typical basket value in January 2026?", "metrics": ["aov"], "same_as": "Average order value (AOV) in January 2026?"}
+{"q": "Units shipped per category in February 2026?", "metrics": ["items_sold"], "same_as": "Items sold per category in February 2026?"}

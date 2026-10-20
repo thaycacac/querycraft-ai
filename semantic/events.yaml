@@ -1,0 +1,93 @@
+# Semantic / metric layer cho EventSQL-Bench (DuckDB).
+# Mỗi metric: định nghĩa kinh doanh, synonym (vi/en), và công thức SQL chuẩn.
+version: 1
+dialect: duckdb
+
+param_access: |
+  event_params là LIST(STRUCT(key, value STRUCT(string_value, int_value, double_value))).
+  Đọc một param: list_filter(event_params, p -> p.key = 'KEY')[1].value.FIELD
+  items là LIST(STRUCT(item_id, item_name, category, price, quantity)); mở rộng bằng:
+  FROM events e, UNNEST(e.items) AS t(i)
+
+tables:
+  events: Mỗi dòng là một event hành vi (session_start, view_item, add_to_cart, begin_checkout, purchase, tutorial_begin, tutorial_complete, level_up, ad_impression).
+  users: Mỗi dòng là một người dùng, có first_seen_date và acquisition_channel.
+
+dimensions:
+  country: {column: events.country, synonyms: [quốc gia, nước, country]}
+  platform: {column: events.platform, synonyms: [nền tảng, platform], values: [ios, android, web]}
+  acquisition_channel: {column: users.acquisition_channel, synonyms: [kênh, kênh acquisition, kênh thu hút, channel, acquisition channel]}
+  item_category: {column: items.category, synonyms: [danh mục, category, nhóm sản phẩm]}
+
+metrics:
+  revenue:
+    description: Doanh thu bán hàng gộp = tổng param 'value' của event purchase (đã gồm phí ship).
+    synonyms: [doanh thu bán hàng, doanh thu mua hàng, purchase revenue, sales revenue, gross revenue]
+    sql: "SUM(list_filter(event_params, p -> p.key = 'value')[1].value.double_value) FILTER (WHERE event_name = 'purchase')"
+  item_revenue:
+    description: Doanh thu sản phẩm = SUM(price*quantity) trên items của event purchase (không gồm ship).
+    synonyms: [doanh thu sản phẩm, doanh thu hàng hóa, item revenue, product revenue]
+    sql: "SUM(i.price * i.quantity) với FROM events e, UNNEST(e.items) AS t(i) WHERE event_name = 'purchase'"
+  ad_revenue:
+    description: Doanh thu quảng cáo = tổng param 'revenue' của event ad_impression.
+    synonyms: [doanh thu quảng cáo, ad revenue, advertising revenue]
+    sql: "SUM(list_filter(event_params, p -> p.key = 'revenue')[1].value.double_value) FILTER (WHERE event_name = 'ad_impression')"
+  orders:
+    description: Số đơn hàng = số transaction_id khác nhau của event purchase.
+    synonyms: [số đơn hàng, đơn hàng, orders, number of orders]
+    sql: "COUNT(DISTINCT list_filter(event_params, p -> p.key = 'transaction_id')[1].value.string_value) FILTER (WHERE event_name = 'purchase')"
+  aov:
+    description: Giá trị đơn hàng trung bình = revenue / orders.
+    synonyms: [aov, giá trị đơn hàng trung bình, average order value]
+    sql: "revenue / orders"
+  items_sold:
+    description: Số sản phẩm bán ra = SUM(quantity) trên items của event purchase.
+    synonyms: [số sản phẩm bán ra, sản phẩm bán ra, items sold, units sold]
+    sql: "SUM(i.quantity) với FROM events e, UNNEST(e.items) AS t(i) WHERE event_name = 'purchase'"
+  dau:
+    description: Người dùng hoạt động theo ngày = số user_pseudo_id khác nhau có event session_start trong ngày.
+    synonyms: [dau, daily active users, người dùng hoạt động theo ngày, người dùng hoạt động hằng ngày]
+    sql: "COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'session_start') GROUP BY event_date"
+  mau:
+    description: Người dùng hoạt động theo tháng = số user_pseudo_id khác nhau có session_start trong tháng.
+    synonyms: [mau, monthly active users, người dùng hoạt động theo tháng, người dùng hoạt động hằng tháng]
+    sql: "COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'session_start') trong khoảng tháng"
+  paying_users:
+    description: Người dùng trả phí = số user_pseudo_id khác nhau có event purchase.
+    synonyms: [người dùng trả phí, paying users, người mua hàng, purchasers]
+    sql: "COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'purchase')"
+  arppu:
+    description: Doanh thu trung bình trên mỗi người dùng trả phí = revenue / paying_users.
+    synonyms: [arppu, doanh thu trung bình trên mỗi người dùng trả phí, average revenue per paying user]
+    sql: "revenue / paying_users"
+  conversion_rate:
+    description: Tỷ lệ chuyển đổi xem->mua = (user có purchase) / (user có view_item).
+    synonyms: [tỷ lệ chuyển đổi từ xem sản phẩm đến mua hàng, chuyển đổi xem sản phẩm đến mua hàng, view-to-purchase conversion]
+    sql: "COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'purchase') * 1.0 / COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'view_item')"
+  cart_conversion_rate:
+    description: Tỷ lệ chuyển đổi giỏ hàng->mua = (user có add_to_cart VÀ purchase) / (user có add_to_cart), tính theo user trong cùng khoảng thời gian.
+    synonyms: [tỷ lệ chuyển đổi từ giỏ hàng đến mua hàng, cart-to-purchase conversion]
+    sql: "WITH u AS (SELECT user_pseudo_id, bool_or(event_name='add_to_cart') a, bool_or(event_name='purchase') p FROM events WHERE <lọc thời gian> GROUP BY 1) SELECT COUNT(*) FILTER (WHERE a AND p) * 1.0 / COUNT(*) FILTER (WHERE a) FROM u"
+  cart_abandonment_rate:
+    description: Tỷ lệ bỏ giỏ hàng = (user có add_to_cart nhưng KHÔNG purchase) / (user có add_to_cart), cùng khoảng thời gian.
+    synonyms: [tỷ lệ bỏ giỏ hàng, cart abandonment rate, cart abandonment]
+    sql: "WITH u AS (SELECT user_pseudo_id, bool_or(event_name='add_to_cart') a, bool_or(event_name='purchase') p FROM events WHERE <lọc thời gian> GROUP BY 1) SELECT COUNT(*) FILTER (WHERE a AND NOT p) * 1.0 / COUNT(*) FILTER (WHERE a) FROM u"
+  tutorial_completion_rate:
+    description: Tỷ lệ hoàn thành tutorial = (user có tutorial_complete) / (user có tutorial_begin).
+    synonyms: [tỷ lệ hoàn thành tutorial, tutorial completion rate]
+    sql: "COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'tutorial_complete') * 1.0 / COUNT(DISTINCT user_pseudo_id) FILTER (WHERE event_name = 'tutorial_begin')"
+  retention_d1:
+    description: Retention D1 của cohort ngày D = số user trong users có first_seen_date = D và có session_start đúng ngày D+1, chia kích thước cohort.
+    synonyms: [retention d1, tỷ lệ giữ chân d1, tỷ lệ quay lại sau 1 ngày, d1 retention]
+    sql: "COUNT(DISTINCT e.user_pseudo_id) * 1.0 / (SELECT COUNT(*) FROM users WHERE first_seen_date = D) FROM events e JOIN users u USING (user_pseudo_id) WHERE u.first_seen_date = D AND e.event_name = 'session_start' AND e.event_date = D + INTERVAL 1 DAY"
+
+# Thuật ngữ mơ hồ: nếu câu hỏi chứa `pattern` mà không chứa bất kỳ `disambiguator` nào, hệ thống nên hỏi lại.
+ambiguity_rules:
+  - term: doanh thu
+    pattern: "(doanh thu|revenue)"
+    candidates: [revenue, item_revenue, ad_revenue]
+    disambiguators: ["bán hàng", "mua hàng", "quảng cáo", "sản phẩm", "hàng hóa", "purchase", "sales", "gross", "advertising", "ad revenue", "item revenue", "product", "aov", "arppu", "trung bình"]
+  - term: tỷ lệ chuyển đổi
+    pattern: "(tỷ lệ chuyển đổi|conversion rate|conversion)"
+    candidates: [conversion_rate, cart_conversion_rate]
+    disambiguators: ["xem sản phẩm", "giỏ hàng", "view-to-purchase", "cart-to-purchase", "view_item"]

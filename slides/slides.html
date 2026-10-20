@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QueryCraft AI – Slide NLP501</title>
+<style>
+  :root { --bg:#fff; --fg:#14213d; --muted:#5c6477; --accent:#2a6df4; --accent2:#e4572e; --ok:#1f9d63; --card:#f3f6fb; --line:#d5dbe8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#10151f; --fg:#eaf0fb; --muted:#9aa5bd; --accent:#6ea0ff; --accent2:#ff8a65; --ok:#4cd391; --card:#1a2233; --line:#2c3750; } }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); font-family:"Helvetica Neue",Arial,sans-serif; overflow:hidden; }
+  .deck { height:100vh; width:100vw; position:relative; }
+  section { position:absolute; inset:0; padding:5vh 7vw 8vh; display:none; flex-direction:column; justify-content:flex-start; overflow:auto; }
+  section.active { display:flex; }
+  h1 { font-size:clamp(28px,4.4vw,56px); margin:0 0 .3em; line-height:1.15; }
+  h2 { font-size:clamp(24px,3vw,40px); margin:0 0 .6em; border-bottom:3px solid var(--accent); padding-bottom:.2em; display:inline-block; }
+  p, li { font-size:clamp(15px,1.65vw,24px); line-height:1.5; }
+  ul { padding-left:1.2em; margin:.3em 0; } li { margin:.35em 0; }
+  .sub { color:var(--muted); font-size:clamp(15px,1.8vw,26px); }
+  .cover { justify-content:center; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:3vw; }
+  @media (max-width:800px){ .cols { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1em 1.2em; }
+  .card h3 { margin:.1em 0 .4em; font-size:clamp(16px,1.9vw,26px); color:var(--accent); }
+  table { border-collapse:collapse; width:100%; font-size:clamp(12px,1.3vw,19px); margin:.4em 0; }
+  th,td { border:1px solid var(--line); padding:.35em .6em; text-align:left; vertical-align:top; }
+  th { background:var(--card); }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  .bar { display:grid; grid-template-columns:11em 1fr 4em; align-items:center; gap:.7em; margin:.35em 0; font-size:clamp(13px,1.5vw,22px); }
+  .bar .t { background:var(--card); border:1px solid var(--line); border-radius:6px; height:1.5em; overflow:hidden; }
+  .bar .f { height:100%; background:var(--accent); } .bar .f.bad { background:var(--accent2); } .bar .f.good { background:var(--ok); }
+  .tag { display:inline-block; white-space:nowrap; padding:.05em .55em; border-radius:99px; font-size:.75em; background:var(--accent); color:#fff; }
+  .tag.no { background:var(--accent2); } .tag.ok { background:var(--ok); } .tag.warn { background:#c98a00; }
+  code { background:var(--card); padding:.05em .35em; border-radius:4px; font-family:Menlo,monospace; font-size:.85em; }
+  .flow { display:flex; flex-wrap:wrap; gap:.5em; align-items:center; }
+  .flow .b { background:var(--card); border:2px solid var(--accent); border-radius:10px; padding:.5em .8em; font-size:clamp(13px,1.5vw,22px); }
+  .flow .b.alt { border-color:var(--accent2); } .flow .a { color:var(--muted); font-size:1.4em; }
+  .foot { position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:space-between; padding:.8vh 2vw; color:var(--muted); font-size:13px; background:linear-gradient(transparent,var(--bg) 60%); }
+  .foot button { background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:.2em .8em; cursor:pointer; }
+  .note { color:var(--muted); font-size:clamp(12px,1.25vw,18px); }
+  @media print { section { position:static; display:flex !important; page-break-after:always; height:100vh; } .foot { display:none; } html,body { overflow:visible; } }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<section class="cover active">
+  <p class="sub">NLP501 – Natural Language Processing · Đồ án cuối khóa</p>
+  <h1>Hệ thống AI chuyển ngôn ngữ tự nhiên thành SQL cho dữ liệu hành vi người dùng</h1>
+  <p class="sub">Agent LLM + semantic/metric layer · QueryCraft AI</p>
+  <p class="note">Sinh viên: [Họ tên] · Giảng viên: [Tên] · Số liệu chạy ngày 2026-10-20</p>
+</section>
+
+<section>
+  <h2>1. Bài toán</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Dữ liệu tracking (app, game, e-commerce): event có tham số <b>lồng nhau</b> (<code>event_params</code>, <code>items</code>), schema không đồng nhất</li>
+        <li>Câu hỏi thực tế: "DAU hôm qua?", "ARPPU tháng 2?", "tỷ lệ bỏ giỏ hàng?"</li>
+        <li>Text-to-SQL thông thường sai ở ba chỗ:</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Ba điểm khó</h3>
+      <ul>
+        <li><b>Mơ hồ:</b> "doanh thu" = bán hàng, theo món, hay quảng cáo?</li>
+        <li><b>Khái niệm nghiệp vụ</b> không có trong schema (DAU, ARPPU)</li>
+        <li><b>Sai im lặng:</b> SQL chạy ra số nhưng sai định nghĩa</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>1. Mục tiêu, phạm vi, giả thuyết</h2>
+  <div class="cols">
+    <div class="card"><h3>Mục tiêu</h3>
+      <ul><li>Agent LLM + semantic layer: tự ánh xạ schema, resolve metric, sinh SQL chạy được, hỏi lại khi mơ hồ (ý tưởng như Metabot)</li>
+      <li>Benchmark riêng cho event lồng nhau và ablation có kiểm định thống kê</li></ul>
+      <h3>Phạm vi và giả định</h3>
+      <ul><li>1 DB DuckDB tổng hợp, chỉ đọc, hỏi 1 lượt, tiếng Việt và Anh</li><li>Làm một mình, model chạy local</li></ul>
+    </div>
+    <div class="card"><h3>Giả thuyết</h3>
+      <ul><li><b>H1</b> agentic (linking, thực thi, tự sửa) tốt hơn prompt đơn</li>
+      <li><b>H2</b> semantic layer tăng độ chính xác với metric nghiệp vụ và schema lồng</li>
+      <li><b>H3</b> model local nhỏ + semantic layer tiệm cận model API lớn</li></ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>2. Literature review</h2>
+  <table>
+    <tr><th>Giai đoạn</th><th>Đại diện</th><th>Mạnh</th><th>Yếu</th></tr>
+    <tr><td>Neural chuyên biệt</td><td>RAT-SQL</td><td>Mã hóa quan hệ schema (EM 57,2)</td><td>Cần huấn luyện, kém khái quát</td></tr>
+    <tr><td>Fine-tune PLM</td><td>PICARD, RESDSQL, CodeS</td><td>Cú pháp đúng, model mở nhỏ</td><td>Cần dữ liệu nhãn; đúng cú pháp ≠ đúng nghĩa</td></tr>
+    <tr><td>Prompting LLM</td><td>DIN-SQL, DAIL-SQL</td><td>Không huấn luyện; chọn ví dụ theo độ tương đồng</td><td>Nhiều lần gọi, prompt thủ công</td></tr>
+    <tr><td>Multi-agent</td><td>MAC-SQL, CHESS, CHASE-SQL, XiYan-SQL</td><td>Cao nhất BIRD (~73–76%)</td><td>Đắt, chậm</td></tr>
+    <tr><td>Fine-tune + RL</td><td>OmniSQL, Arctic-R1</td><td>Model nhỏ mạnh</td><td>Cần hạ tầng huấn luyện</td></tr>
+    <tr><td>Doanh nghiệp</td><td>Spider 2.0, ReFoRCE</td><td>Sát thực tế</td><td>o1-preview chỉ 21,3%</td></tr>
+    <tr><td>Semantic layer</td><td>KG-SQL, Metabot, MetricFlow</td><td>Định nghĩa nhất quán (16% → 54%)</td><td>Phải xây, bảo trì</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>2. Khoảng trống nghiên cứu</h2>
+  <table>
+    <tr><th>#</th><th>Khoảng trống</th><th>Dự án trả lời bằng</th></tr>
+    <tr><td>G1</td><td>Event lồng nhau + metric nghiệp vụ gần như chưa được đo</td><td>EventSQL-Bench</td></tr>
+    <tr><td>G2</td><td>Đóng góp riêng của semantic layer ít được đo bằng kiểm định thống kê</td><td>Ablation + McNemar</td></tr>
+    <tr><td>G3</td><td>Hỏi lại khi mơ hồ hiếm khi là nhiệm vụ riêng</td><td>17 câu mơ hồ, P/R/F1</td></tr>
+    <tr><td>G4</td><td>Độ bền của bước resolve metric với cách diễn đạt khác chưa kiểm tra</td><td>20 câu paraphrase</td></tr>
+    <tr><td>G5</td><td>Thành phần như cắt schema mặc định là có lợi</td><td>Ablation trên 2 benchmark</td></tr>
+    <tr><td>G6</td><td>Model nhỏ chạy local trong miền này ít được nghiên cứu</td><td>Qwen3-8B và Qwen2.5-3B</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>3. Datasets hiện có</h2>
+  <table>
+    <tr><th>Dataset</th><th>Quy mô</th><th>Đặc trưng</th><th>Hạn chế cho đề tài</th></tr>
+    <tr><td>Spider</td><td>10.181 câu / 200 DB</td><td>Cross-domain, join, nested</td><td>Schema sạch, nhỏ; không có dữ liệu lồng; gần bão hòa</td></tr>
+    <tr><td>BIRD</td><td>12.751 câu / 95 DB</td><td>DB lớn, bẩn, có <i>evidence</i>; ChatGPT 40,08% vs người 92,96%</td><td>Evidence viết sẵn từng câu</td></tr>
+    <tr><td>Spider 2.0</td><td>Tác vụ doanh nghiệp</td><td>Schema rất lớn, BigQuery/Snowflake</td><td>Đắt, cần cloud</td></tr>
+    <tr><td>Dr.Spider</td><td>17 phép nhiễu</td><td>Đo độ bền (−14,0%; −50,7%)</td><td>Nhiễu nhân tạo</td></tr>
+    <tr><td><b>EventSQL-Bench</b></td><td>162 câu, 1.500 user, 59 ngày</td><td>Lồng nhau, metric, câu mơ hồ, 4 mức khó</td><td>Mô phỏng, 1 DB, nhỏ</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>4. Phương pháp đánh giá</h2>
+  <div class="cols">
+    <div class="card"><h3>Metric</h3>
+      <ul><li><b>Execution Accuracy (EX)</b>: so kết quả thực thi (cho phép hoán vị cột)</li>
+      <li>Clarification P/R/F1 cho câu mơ hồ</li>
+      <li>Valid-SQL rate, độ trễ, token</li></ul></div>
+    <div class="card"><h3>Thống kê và thiết kế</h3>
+      <ul><li>McNemar exact (cùng tập câu), bootstrap 95% CI</li>
+      <li>Ablation tích lũy và từng thành phần riêng lẻ</li>
+      <li>Tập "họ câu chưa thấy" để loại rò rỉ few-shot</li>
+      <li>Spider/BIRD: mẫu 200 câu cố định</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Kết quả các công trình trước</h2>
+  <table>
+    <tr><th>Phương pháp</th><th>Benchmark</th><th class="n">Kết quả</th></tr>
+    <tr><td>RAT-SQL</td><td>Spider (EM)</td><td class="n">57,2% (65,6% với BERT)</td></tr>
+    <tr><td>DIN-SQL</td><td>Spider test / BIRD test</td><td class="n">85,3% / 55,9%</td></tr>
+    <tr><td>DAIL-SQL</td><td>Spider</td><td class="n">86,6%</td></tr>
+    <tr><td>MAC-SQL + GPT-4</td><td>BIRD test</td><td class="n">59,59%</td></tr>
+    <tr><td>CHESS</td><td>BIRD test</td><td class="n">71,10%</td></tr>
+    <tr><td>CHASE-SQL</td><td>BIRD dev / test</td><td class="n">73,01% / 73,0%</td></tr>
+    <tr><td>XiYan-SQL</td><td>BIRD / Spider test</td><td class="n">75,63% / 89,65%</td></tr>
+    <tr><td>o1-preview</td><td>Spider 2.0</td><td class="n">21,3%</td></tr>
+    <tr><td>ReFoRCE</td><td>Spider 2.0 Snow / Lite</td><td class="n">35,83 / 36,56</td></tr>
+  </table>
+  <p class="note">Nguồn: abstract arXiv, truy cập 2026-10-20. Khác split/model/metric nên không so trực tiếp với số của dự án.</p>
+</section>
+
+<section>
+  <h2>6. Phương pháp đề xuất: kiến trúc</h2>
+  <div class="flow">
+    <div class="b">Câu hỏi</div><span class="a">→</span>
+    <div class="b alt">Phát hiện mơ hồ<br><small>→ hỏi lại</small></div><span class="a">→</span>
+    <div class="b alt">Metric resolver<br><small>YAML + LLM fallback</small></div><span class="a">→</span>
+    <div class="b">Schema linker + profiler</div><span class="a">→</span>
+    <div class="b">Prompt + few-shot (BM25)</div><span class="a">→</span>
+    <div class="b">LLM sinh SQL</div><span class="a">→</span>
+    <div class="b">Validator read-only</div><span class="a">→</span>
+    <div class="b">Tự sửa lỗi ≤ 2 vòng</div><span class="a">→</span>
+    <div class="b">Kết quả + SQL</div>
+  </div>
+  <ul>
+    <li><b>Semantic layer</b> (YAML): 15 metric, synonym vi/en, công thức SQL chuẩn, luật mơ hồ</li>
+    <li>Hỏi lại không gọi LLM → tiết kiệm chi phí, tránh đoán</li>
+    <li>Chỉ SELECT/WITH, DuckDB read-only</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6. EventSQL-Bench</h2>
+  <div class="cols">
+    <div class="card"><h3>Dữ liệu</h3>
+      <ul><li>DuckDB, seed 7: 1.500 user, 59 ngày</li><li>Bảng <code>events</code> với <code>event_params</code>, <code>items</code> lồng nhau</li><li>Funnel view → cart → checkout → purchase</li></ul></div>
+    <div class="card"><h3>Câu hỏi: 162 câu</h3>
+      <ul><li>L1 phẳng · L2 lồng nhau · L3 metric · L4 join/cohort</li><li>37 few-shot pool; 125 test (108 trả lời được, 17 mơ hồ)</li><li>3 họ câu giữ ngoài kho few-shot (12 câu)</li><li>20 câu paraphrase ngoài từ điển</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>7. Kết quả chính: ablation (qwen3:8b, tiếng Việt)</h2>
+  <div class="bar"><span>baseline</span><div class="t"><div class="f bad" style="width:35.2%"></div></div><b>0,352</b></div>
+  <div class="bar"><span>+linking</span><div class="t"><div class="f bad" style="width:29.6%"></div></div><b>0,296</b></div>
+  <div class="bar"><span>+fewshot</span><div class="t"><div class="f" style="width:88%"></div></div><b>0,880</b></div>
+  <div class="bar"><span>+semantic</span><div class="t"><div class="f good" style="width:96.3%"></div></div><b>0,963</b></div>
+  <div class="bar"><span>+correction</span><div class="t"><div class="f good" style="width:98.1%"></div></div><b>0,981</b></div>
+  <div class="bar"><span>semantic_only</span><div class="t"><div class="f" style="width:44.4%"></div></div><b>0,444</b></div>
+  <div class="bar"><span>correction_only</span><div class="t"><div class="f" style="width:37%"></div></div><b>0,370</b></div>
+  <p class="note">108 câu trả lời được. McNemar: +semantic vs +fewshot <b>p = 0,0039</b>; +linking vs baseline p = 0,031 (tệ hơn); +correction vs +semantic p = 0,5 (n.s.); correction_only vs baseline p = 0,5 (n.s.).</p>
+</section>
+
+<section>
+  <h2>7. Theo mức độ và họ câu chưa thấy</h2>
+  <table>
+    <tr><th>Cấu hình</th><th class="n">L1</th><th class="n">L2</th><th class="n">L3</th><th class="n">L4</th><th class="n">Chưa thấy (n=12)</th></tr>
+    <tr><td>baseline</td><td class="n">0,93</td><td class="n">0,00</td><td class="n">0,42</td><td class="n">0,09</td><td class="n">3/12</td></tr>
+    <tr><td>+fewshot</td><td class="n">1,00</td><td class="n">1,00</td><td class="n">0,98</td><td class="n">0,64</td><td class="n">3/12</td></tr>
+    <tr><td>+semantic</td><td class="n">1,00</td><td class="n">1,00</td><td class="n">0,98</td><td class="n">0,91</td><td class="n"><b>10/12</b></td></tr>
+    <tr><td>+correction</td><td class="n">1,00</td><td class="n">1,00</td><td class="n">0,98</td><td class="n">0,97</td><td class="n"><b>12/12</b></td></tr>
+  </table>
+  <ul>
+    <li>Few-shot sửa phần lớn lỗi cú pháp lồng nhau (L2: 0 → 1,00) nhưng chủ yếu nhờ tái dùng khuôn mẫu</li>
+    <li>Semantic layer tăng ở L4 (0,64 → 0,91) và ở họ câu không có ví dụ (p = 0,0156)</li>
+    <li>Hỏi lại câu mơ hồ: P/R/F1 = 1,00 <span class="tag warn">cận trên, dựa trên luật</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>7. Độ bền, model nhỏ, benchmark công khai</h2>
+  <div class="cols">
+    <div class="card"><h3>20 câu paraphrase</h3>
+      <table><tr><th>Cấu hình</th><th class="n">Recall</th><th class="n">EX</th></tr>
+      <tr><td>no_semantic</td><td class="n">0/20</td><td class="n">0,58</td></tr>
+      <tr><td>rule-based</td><td class="n">0/20</td><td class="n">0,53</td></tr>
+      <tr><td>rule + LLM fallback</td><td class="n">17/20</td><td class="n"><b>0,89</b></td></tr></table>
+      <p class="note">Từ điển synonym gãy hoàn toàn khi diễn đạt khác → cần LLM fallback.</p></div>
+    <div class="card"><h3>Model và ngôn ngữ</h3>
+      <table><tr><th>Model</th><th class="n">base</th><th class="n">+fewshot</th><th class="n">+semantic</th></tr>
+      <tr><td>qwen3:8b vi</td><td class="n">0,352</td><td class="n">0,880</td><td class="n">0,963</td></tr>
+      <tr><td>qwen3:8b en</td><td class="n">0,333</td><td class="n">0,889</td><td class="n">0,991</td></tr>
+      <tr><td>qwen2.5:3b vi</td><td class="n">0,167</td><td class="n">0,556</td><td class="n">0,556</td></tr></table></div>
+  </div>
+  <div class="card" style="margin-top:1em"><h3>Spider và BIRD (200 câu mẫu)</h3>
+    <table><tr><th>Dataset</th><th class="n">baseline</th><th class="n">+linking</th><th class="n">chỉ evidence</th><th class="n">+evidence & linking</th><th class="n">+correction</th></tr>
+    <tr><td>Spider dev</td><td class="n">0,720</td><td class="n">0,725</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+    <tr><td>BIRD dev</td><td class="n">0,240</td><td class="n">0,155</td><td class="n"><b>0,345</b></td><td class="n">0,220</td><td class="n">0,250</td></tr></table></div>
+</section>
+
+<section>
+  <h2>8. Điều rút ra</h2>
+  <table>
+    <tr><th>Giả thuyết</th><th>Kết luận</th><th>Bằng chứng</th></tr>
+    <tr><td>H1 agentic &gt; prompt đơn</td><td><span class="tag warn">Ủng hộ yếu</span></td><td>Tự sửa lỗi riêng lẻ không có ý nghĩa (0,352 → 0,370, p = 0,5); chỉ sửa lỗi hiện rõ, không sửa sai metric im lặng</td></tr>
+    <tr><td>H2 semantic layer giúp</td><td><span class="tag ok">Ủng hộ</span></td><td>+0,083 so với few-shot (p = 0,0039); L4 0,64 → 0,91; chưa thấy 3/12 → 10/12; BIRD evidence 0,240 → 0,345</td></tr>
+    <tr><td>H3 local nhỏ ≈ API lớn</td><td><span class="tag no">Chưa kiểm chứng</span></td><td>Không có API key; model 3B chỉ đạt 0,657</td></tr>
+  </table>
+  <ul>
+    <li><b>Bất ngờ:</b> schema linking BM25 làm <b>tệ hơn</b> (EventSQL −0,056, p = 0,031; BIRD 0,240 → 0,155); nguyên nhân chưa kiểm chứng</li>
+    <li>Đầu tư vào định nghĩa metric đáng giá hơn thêm vòng lặp agent</li>
+  </ul>
+</section>
+
+<section>
+  <h2>9. Hạn chế</h2>
+  <ul>
+    <li>SQL vàng và YAML do <b>cùng tác giả viết</b> → mức tăng của semantic layer có thể lạc quan</li>
+    <li>Few-shot cùng họ rò rỉ khuôn mẫu; nhóm chưa thấy n = 12, paraphrase n = 20</li>
+    <li>Một DB tổng hợp; EX không phải test-suite; Spider/BIRD có thể bị contamination</li>
+    <li>Ba seed giống hệt nhau (temperature 0) → không đo được phương sai</li>
+    <li>Chưa chạy: model API, Spider 2.0, Dr.Spider</li>
+  </ul>
+  <h2 style="margin-top:.8em">Hướng phát triển</h2>
+  <ul>
+    <li>Chạy model API; người thứ hai viết SQL vàng; test-suite accuracy</li>
+    <li>Schema linker bằng embedding; majority voting; fine-tune/RL model nhỏ</li>
+    <li>Kiểm chứng trên GA4/Spider 2.0; hội thoại nhiều lượt</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Demo</h2>
+  <div class="card">
+    <p><code>.venv/bin/python -m querycraft.cli "Doanh thu tháng 1/2026"</code><br>→ hệ thống <b>hỏi lại</b>: revenue, item_revenue hay ad_revenue?</p>
+    <p><code>.venv/bin/python -m querycraft.cli "ARPPU của tháng 2/2026 là bao nhiêu?"</code><br>→ resolve <code>arppu</code> (+ revenue, paying_users), sinh SQL, trả kết quả <b>209,65</b></p>
+    <p><code>.venv/bin/streamlit run app/app.py</code> · giao diện web</p>
+  </div>
+  <p class="sub" style="margin-top:1em">Cảm ơn thầy/cô và các bạn. Hỏi đáp.</p>
+</section>
+
+</div>
+
+<div class="foot">
+  <span id="count">1 / 1</span>
+  <span>← → để chuyển slide · F toàn màn hình · P in/PDF (mỗi slide một trang)</span>
+  <span><button id="prev">‹</button> <button id="next">›</button></span>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('section')];
+  let i = 0;
+  try { const h = parseInt(location.hash.slice(1), 10); if (h >= 1 && h <= slides.length) i = h - 1; } catch (e) {}
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    document.getElementById('count').textContent = (i + 1) + ' / ' + slides.length;
+    try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
+  }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
+    else if (e.key === 'p' || e.key === 'P') window.print();
+  });
+  document.getElementById('prev').onclick = () => show(i - 1);
+  document.getElementById('next').onclick = () => show(i + 1);
+  document.getElementById('deck').addEventListener('click', e => { if (e.clientX > innerWidth / 2) show(i + 1); });
+  show(i);
+</script>
+</body>
+</html>

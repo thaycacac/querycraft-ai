@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+src/querycraft/__init__.py
+src/querycraft.egg-info/PKG-INFO
+src/querycraft.egg-info/SOURCES.txt
+src/querycraft.egg-info/dependency_links.txt
+src/querycraft.egg-info/requires.txt
+src/querycraft.egg-info/top_level.txt

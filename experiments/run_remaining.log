@@ -1,0 +1,24 @@
+[        baseline] seed=0 EX=0.333 (n=108) tok=23476
+[        +fewshot] seed=0 EX=0.889 (n=108) tok=68366
+[       +semantic] seed=0 EX=0.991 (n=108) tok=86388
+[        +clarify] seed=0 EX=0.991 (n=108) tok=75305
+[        baseline] seed=0 EX=0.167 (n=108) tok=22922
+[        +linking] seed=0 EX=0.083 (n=108) tok=39797
+[        +fewshot] seed=0 EX=0.556 (n=108) tok=69708
+[       +semantic] seed=0 EX=0.556 (n=108) tok=87730
+[     +correction] seed=0 EX=0.657 (n=108) tok=142093
+[        +clarify] seed=0 EX=0.657 (n=108) tok=126697
+[spider       baseline] EX=0.720 n=200
+[spider       +linking] EX=0.725 n=200
+[bird       baseline] EX=0.240 n=200
+[bird       +linking] EX=0.155 n=200
+[bird knowledge_only] EX=0.345 n=200
+[bird     +knowledge] EX=0.220 n=200
+[bird    +correction] EX=0.250 n=200
+[        baseline] seed=1 EX=0.352 (n=108) tok=23922
+[        +fewshot] seed=1 EX=0.880 (n=108) tok=70708
+[       +semantic] seed=1 EX=0.963 (n=108) tok=88730
+[        baseline] seed=2 EX=0.352 (n=108) tok=23922
+[        +fewshot] seed=2 EX=0.880 (n=108) tok=70708
+[       +semantic] seed=2 EX=0.963 (n=108) tok=88730
+ALL_DONE

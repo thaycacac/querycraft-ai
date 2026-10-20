@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: querycraft
+Version: 0.1.0
+Summary: Agentic Text-to-SQL with a semantic/metric layer for user-behavior event data
+Requires-Python: >=3.11
+Requires-Dist: duckdb>=1.0
+Requires-Dist: sqlglot>=25.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: rank-bm25>=0.2.2
+Requires-Dist: anthropic>=0.40
+Requires-Dist: openai>=1.50
+Requires-Dist: pandas>=2.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Provides-Extra: app
+Requires-Dist: streamlit>=1.38; extra == "app"
